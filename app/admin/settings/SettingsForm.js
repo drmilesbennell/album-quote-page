@@ -65,6 +65,20 @@ export default function SettingsForm({ initialSettings }) {
           />
           <p className="hint">Shown above the signature box on the client page.</p>
         </div>
+        <div className="field">
+          <label>Zapier webhook URL</label>
+          <input
+            type="text"
+            value={settings.webhookUrl || ''}
+            placeholder="https://hooks.zapier.com/hooks/catch/…"
+            onChange={(event) => set('webhookUrl', event.target.value)}
+          />
+          <p className="hint">
+            Optional. When a client accepts a quote, its details (client, chosen items,
+            totals, signature) are sent here as JSON. Paste a Zapier Catch Hook URL to
+            feed a zap, e.g. creating the client and invoice in Pixifi.
+          </p>
+        </div>
         <button className="btn">Save settings</button>
       </form>
     </>
