@@ -82,8 +82,11 @@ tries to write local files, which does not persist on Vercel. Without
 
 ## Notes
 
-- The starter catalog was seeded from the July 2026 brand standards (Core 5250,
-  Classic 6550, Premier 7750, Additional Hours 550). Edit freely in the admin.
+- The starter catalog carries the July 2026 pricing - Keepsake $2300, Heirloom
+  $4000 and Legacy $5900 with their inclusions and per-collection add-on rates,
+  the a-la-carte add-ons, and the wall art and print list on album quotes. Edit
+  freely in the admin. It loads only when the catalog is completely empty, so
+  deleting every entry and reloading the catalog page restores it.
 - Tax is a single percentage. The default lives in Settings and each quote can
   override its own rate until it is accepted.
 - Accepted quotes cannot be edited or re-signed. Delete a quote from the
