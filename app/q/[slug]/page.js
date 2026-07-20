@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
-import ClientQuote from '@/components/ClientQuote';
+import QuoteView from '@/components/QuoteView';
 import { getQuoteBySlug, getSettings } from '@/lib/data';
 import { missingDatabaseUrl } from '@/lib/db';
+import { isAuthenticated } from '@/lib/auth';
 import SetupNotice from '@/components/SetupNotice';
 import { publicQuote, publicSettings } from '@/lib/public';
 
@@ -19,10 +20,14 @@ export default async function QuotePage({ params }) {
   const quote = await getQuoteBySlug(slug);
   if (!quote) notFound();
   const settings = await getSettings();
+  const admin = await isAuthenticated();
   return (
-    <ClientQuote
-      initialQuote={publicQuote(quote)}
+    <QuoteView
+      // Admin mode needs the id (for saves) and full fields; viewers get the
+      // public shape only.
+      initialQuote={admin ? quote : publicQuote(quote)}
       initialSettings={publicSettings(settings)}
+      admin={admin}
     />
   );
 }

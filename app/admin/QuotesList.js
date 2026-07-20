@@ -5,10 +5,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { computeTotals, formatMoney } from '@/lib/totals';
 
+const QUOTE_TYPES = [
+  { value: 'wedding', label: 'Wedding' },
+  { value: 'album', label: 'Album' },
+  { value: 'both', label: 'Wedding + Album' },
+];
+
 export default function QuotesList({ initialQuotes }) {
   const router = useRouter();
   const [quotes, setQuotes] = useState(initialQuotes);
   const [clientName, setClientName] = useState('');
+  const [quoteType, setQuoteType] = useState('wedding');
   const [busy, setBusy] = useState(false);
 
   async function refresh() {
@@ -22,12 +29,12 @@ export default function QuotesList({ initialQuotes }) {
     const res = await fetch('/api/quotes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientName }),
+      body: JSON.stringify({ clientName, quoteType }),
     });
     setBusy(false);
     if (res.ok) {
-      const { id } = await res.json();
-      router.push(`/admin/quotes/${id}`);
+      const { slug } = await res.json();
+      router.push(`/q/${slug}`);
     }
   }
 
@@ -53,13 +60,26 @@ export default function QuotesList({ initialQuotes }) {
             value={clientName}
             onChange={(event) => setClientName(event.target.value)}
           />
+          <select
+            value={quoteType}
+            onChange={(event) => setQuoteType(event.target.value)}
+            style={{ padding: '11px 10px', border: '1px solid var(--anp-rule)', background: '#fff' }}
+          >
+            {QUOTE_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
           <button className="btn" disabled={busy}>
             New quote
           </button>
-          <span className="muted">
-            New quotes start from your current collections and add-ons.
-          </span>
         </form>
+        <p className="muted" style={{ margin: '10px 0 0' }}>
+          A new quote copies the matching collections and add-ons from your catalog, then
+          opens the live page. Share your screen there and click as you talk - it saves
+          itself, and the client's copy of the link follows along.
+        </p>
       </div>
 
       <div className="panel">
@@ -82,7 +102,7 @@ export default function QuotesList({ initialQuotes }) {
                 return (
                   <tr key={quote.id}>
                     <td className="cell-name">
-                      <Link href={`/admin/quotes/${quote.id}`}>
+                      <Link href={`/q/${quote.slug}`}>
                         {quote.clientName || 'Unnamed quote'}
                       </Link>
                       {quote.signatureName ? (
@@ -103,8 +123,8 @@ export default function QuotesList({ initialQuotes }) {
                       })}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <Link className="btn ghost small" href={`/q/${quote.slug}`} target="_blank">
-                        View
+                      <Link className="btn ghost small" href={`/q/${quote.slug}`}>
+                        Open
                       </Link>{' '}
                       <button className="btn danger small" onClick={() => deleteQuote(quote)}>
                         Delete

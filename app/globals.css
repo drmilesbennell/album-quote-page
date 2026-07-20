@@ -549,6 +549,21 @@ a:hover {
   color: var(--anp-danger);
 }
 
+.admin-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+}
+.admin-toolbar .muted {
+  align-self: center;
+}
+.admin-toolbar .btn,
+.admin-toolbar .save-state {
+  margin-bottom: 4px;
+}
+
 .copy-link-box {
   display: flex;
   gap: 8px;

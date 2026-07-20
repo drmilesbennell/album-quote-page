@@ -14,21 +14,27 @@ only.
 
 ## How it works
 
-- **Quotes** (`/admin`) - create one per client. Each new quote copies your
-  current collections and add-ons, so editing the catalog later never changes a
-  quote you already sent.
-- **Collections & Add-ons** (`/admin/catalog`) - the reusable catalog.
-  Collections are checkbox lines with a fixed price and a list of inclusions.
-  Add-ons get a quantity box (album pages, additional hours).
-- **Quote editor** (`/admin/quotes/…`) - the working surface for a call. Check
-  a collection, change a quantity, edit any line's name, price or text, add
-  custom lines, set the tax rate. Everything autosaves.
-- **Client link** (`/q/…`) - view-only. The client sees checkboxes, prices and
-  live totals, and can sign at the bottom. The page polls every 4 seconds, so it
-  follows along while you edit during a call.
+There is one quote page per client (`/q/…`), and it behaves differently
+depending on who is looking at it.
+
+- **Signed in (you)** - the page is live. Checkboxes and quantity boxes work
+  directly on the page, a slim toolbar on top holds the client name, tax rate
+  and a copy-link button, and every change autosaves. This is the screen you
+  share on a sales call.
+- **Not signed in (the client)** - the exact same page, read-only. It refreshes
+  itself every few seconds, so if they have the link open while you click, the
+  prices move in front of them. The signature box at the bottom is theirs.
+- **Quotes** (`/admin`) - create a quote per client and pick its type. Wedding
+  quotes pull in your wedding collections, album quotes pull in your album
+  collections (the post-wedding upsell), and each quote snapshots the catalog
+  at creation so later catalog edits never change a sent quote.
+- **Collections & Add-ons** (`/admin/catalog`) - the reusable catalog, in three
+  sections. Wedding Collections and Album Collections are checkbox lines with a
+  price, inclusions and fine print. Add-ons get a quantity box (album pages,
+  additional hours) and a setting for which quote type they appear on.
 - **Acceptance** - typing a name and accepting locks the quote permanently. The
-  admin shows who signed, when, from what IP, and the totals at signing. The
-  Print button on the client page produces a clean printable copy for your
+  dashboard shows who signed and when, and the record keeps the IP and the
+  totals at signing. The Print button produces a clean printable copy for your
   records or for re-keying into Pixifi.
 
 ## Running locally
@@ -65,12 +71,13 @@ tries to write local files, which does not persist on Vercel. Without
 
 ## Day-to-day use on a sales call
 
-1. Before the call, create a quote for the client and copy the link from the
-   editor's sidebar. Email or text it to them.
-2. On the call, keep the editor open. As you discuss options, check collections
-   on and off and adjust add-on quantities. The client watches their link and
-   sees the total move in real time.
-3. When they are ready, they type their name and accept on their own screen.
+1. Create a quote from the dashboard, choosing wedding or album. It opens the
+   live page.
+2. Share your screen and click as you talk - check collections on and off,
+   change the album-pages count, and the total moves in front of the client.
+3. Send them the link (Copy client link in the toolbar) by email or text. On
+   their side it is read-only and follows your changes live.
+4. When they are ready, they type their name and accept from their own device.
    The quote locks and the dashboard shows it as accepted.
 
 ## Notes
