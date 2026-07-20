@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
+import { missingDatabaseUrl } from '@/lib/db';
+import SetupNotice from '@/components/SetupNotice';
 import LogoutButton from './LogoutButton';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }) {
   if (!(await isAuthenticated())) redirect('/login');
+  if (missingDatabaseUrl()) return <SetupNotice />;
   return (
     <>
       <nav className="admin-nav no-print">
