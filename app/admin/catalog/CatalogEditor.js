@@ -299,6 +299,16 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
     else setAddons((prev) => prev.filter((a) => a.id !== entry.id));
   }
 
+  async function bulkClear(scope, reseed, message) {
+    if (!window.confirm(message)) return;
+    const res = await fetch('/api/catalog/clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scope, reseed }),
+    });
+    if (res.ok) window.location.reload();
+  }
+
   async function moveCollection(entry, delta) {
     // Reorder within the entry's own section, then renumber everything.
     const subset = collections.filter((c) => c.category === entry.category);
@@ -359,6 +369,32 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
     <>
       <div className="admin-title-row">
         <h1 className="admin-title">Collections &amp; Add-ons</h1>
+        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            className="btn ghost small"
+            onClick={() =>
+              bulkClear(
+                'all',
+                true,
+                'Replace the ENTIRE catalog with the built-in starter list? Every current collection and add-on is deleted first. Existing quotes are not affected.'
+              )
+            }
+          >
+            Restore starter catalog
+          </button>
+          <button
+            className="btn danger small"
+            onClick={() =>
+              bulkClear(
+                'all',
+                false,
+                'Delete EVERY collection and add-on? The catalog will be empty. Existing quotes are not affected.'
+              )
+            }
+          >
+            Delete everything
+          </button>
+        </span>
       </div>
       <p className="muted" style={{ marginTop: 0, marginBottom: 20 }}>
         This catalog is the starting point for every new quote. Editing it never changes
@@ -376,8 +412,26 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
         'Post-wedding album collections, shown on album quotes.'
       )}
 
-      <h2 className="panel-heading">Add-ons</h2>
-      <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap' }}>
+        <h2 className="panel-heading" style={{ marginBottom: 0 }}>
+          Add-ons
+        </h2>
+        {addons.length > 1 ? (
+          <button
+            className="btn danger small"
+            onClick={() =>
+              bulkClear(
+                'addons',
+                false,
+                `Delete all ${addons.length} add-ons? Collections stay. Existing quotes are not affected.`
+              )
+            }
+          >
+            Delete all add-ons
+          </button>
+        ) : null}
+      </div>
+      <p className="muted" style={{ marginTop: 8, marginBottom: 16 }}>
         Add-ons get a quantity box on the quote. Set a price per collection and the
         quote reprices the line automatically when that collection is checked - or mark
         it included so it shows no charge. Add-ons live in the collapsed a la carte
