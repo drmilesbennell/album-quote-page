@@ -63,7 +63,29 @@ database setup is needed locally.
 
 Your admin lives at `https://your-project.vercel.app/admin`. Client links look
 like `https://your-project.vercel.app/q/AbC123…` and are safe to text or email.
-You can attach a custom domain in Settings → Domains later.
+
+## Using your own subdomain (quotes.anthonyniccoli.com)
+
+The app is domain-agnostic - links and cookies follow whatever address serves
+it - so this is pure DNS setup, done once.
+
+1. In Vercel, open the project → **Settings → Domains** → **Add**, and enter
+   the subdomain, e.g. `quotes.anthonyniccoli.com`. Leave it assigned to
+   Production. Vercel then shows the DNS record it needs - for a subdomain
+   that is a CNAME pointing at `cname.vercel-dns.com`.
+2. Wherever `anthonyniccoli.com`'s DNS lives (Squarespace - **Settings →
+   Domains → anthonyniccoli.com → DNS Settings → Custom Records**), add that
+   record - Type `CNAME`, Host `quotes`, Data `cname.vercel-dns.com`.
+3. Back on the Vercel Domains page, wait for the check to turn green. Vercel
+   issues the SSL certificate automatically. Usually minutes; DNS can
+   occasionally take a few hours.
+
+After that, the admin is `https://quotes.anthonyniccoli.com/admin`, and the
+Copy client link button produces `quotes.anthonyniccoli.com/q/…` links
+automatically. The old `.vercel.app` address keeps working - previously sent
+links stay valid. To make old links hop to the new domain, edit the
+`.vercel.app` domain on the same settings page and set it to redirect to the
+new one.
 
 Both environment variables matter in production. Without `DATABASE_URL` the app
 tries to write local files, which does not persist on Vercel. Without
