@@ -123,7 +123,7 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
   const totals = computeTotals(quote.items, quote.taxRate);
 
   return (
-    <div className="quote-shell">
+    <div className="quote-shell pad-for-totals">
       {admin ? (
         <div className="panel no-print admin-toolbar">
           <Link href="/admin" className="muted" style={{ whiteSpace: 'nowrap' }}>
@@ -178,7 +178,10 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
 
         <div className="item-table">
           {quote.items.map((item) => (
-            <div className="item-row" key={item.key}>
+            <div
+              className={`item-row${item.kind === 'addon' ? ' addon-row' : ''}${item.indent ? ' indent' : ''}`}
+              key={item.key}
+            >
               <div className="item-check">
                 <input
                   type="checkbox"
@@ -250,6 +253,27 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
             </form>
           </div>
         )}
+      </div>
+
+      {/* Always-visible running total while scrolling; print uses the
+          in-card totals block instead. */}
+      <div className="totals-bar no-print">
+        <div className="totals-bar-inner">
+          <span className="totals-bar-item">
+            <span className="totals-label">Subtotal</span>
+            <span className="totals-value">{formatMoney(totals.subtotalCents)}</span>
+          </span>
+          <span className="totals-bar-item">
+            <span className="totals-label">
+              Tax{totals.taxRate ? ` (${totals.taxRate}%)` : ''}
+            </span>
+            <span className="totals-value">{formatMoney(totals.taxCents)}</span>
+          </span>
+          <span className="totals-bar-item grand">
+            <span className="totals-label">Total</span>
+            <span className="totals-value">{formatMoney(totals.totalCents)}</span>
+          </span>
+        </div>
       </div>
     </div>
   );

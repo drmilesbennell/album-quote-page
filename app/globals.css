@@ -247,6 +247,35 @@ a:hover {
   padding-top: 5px;
 }
 
+/* Compact styling for add-on lines so long lists (wall art, page rates)
+   stay light on the page. */
+.item-row.addon-row {
+  padding: 13px 0;
+}
+.addon-row .item-name {
+  font-size: 17px;
+}
+.addon-row .item-desc {
+  margin-top: 3px;
+  font-size: 12px;
+}
+.addon-row .item-unit,
+.addon-row .item-total {
+  font-size: 16px;
+  padding-top: 3px;
+}
+.addon-row .item-qty {
+  padding: 4px 4px;
+}
+
+/* An indented add-on belongs to the collection above it. */
+.item-row.indent {
+  border-top: 0;
+  margin-top: -8px;
+  padding-top: 0;
+  padding-left: 34px;
+}
+
 .totals {
   border-top: 1px solid var(--anp-rule);
   padding-top: 20px;
@@ -275,6 +304,57 @@ a:hover {
 .totals .grand .totals-value {
   font-size: 28px;
   color: var(--anp-blue);
+}
+
+/* Sticky running total - white surface with a hairline, per the deployment
+   doctrine (colour lives in type, not fills). */
+.pad-for-totals {
+  padding-bottom: 130px;
+}
+.totals-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: var(--anp-surface);
+  border-top: 1px solid var(--anp-rule);
+}
+.totals-bar-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.totals-bar-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.totals-bar .totals-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--anp-blue);
+}
+.totals-bar .totals-value {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--anp-body);
+}
+.totals-bar .grand .totals-value {
+  font-size: 26px;
+  color: var(--anp-blue);
+}
+@media (max-width: 640px) {
+  .totals-bar-item:not(.grand) {
+    display: none;
+  }
 }
 
 .accept-section {

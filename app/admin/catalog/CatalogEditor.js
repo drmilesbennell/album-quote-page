@@ -56,6 +56,23 @@ function EntryCard({ entry, fields, onChange, onSave, onDelete, onMove, saveStat
             </select>
           </div>
         ) : null}
+        {fields.parentOptions ? (
+          <div className="field">
+            <label>Attach under</label>
+            <select
+              value={entry.parentCollectionId || ''}
+              onChange={(event) => onChange({ ...entry, parentCollectionId: event.target.value })}
+              style={{ width: '100%', padding: '9px 8px', border: '1px solid var(--anp-rule)', background: '#fff' }}
+            >
+              <option value="">Standalone line</option>
+              {fields.parentOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  Under {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
       </div>
       <div className="field">
         <label>{fields.descLabel}</label>
@@ -158,6 +175,7 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
         position: entry.position,
         active: entry.active,
         category: entry.category,
+        parentCollectionId: entry.parentCollectionId || '',
       }),
     });
     setSaveState(entry.id, res.ok ? 'Saved' : 'Save failed');
@@ -298,7 +316,9 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
       <h2 className="panel-heading">Add-ons</h2>
       <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
         Add-ons get a quantity box on the quote, e.g. extra album pages or additional
-        hours. Choose which kind of quote each one appears on.
+        hours. Choose which kind of quote each one appears on. An add-on attached under
+        a collection sits indented beneath it and only appears on quotes that include
+        that collection - use this for per-collection page rates.
       </p>
       {addons.map((entry, index) => (
         <EntryCard
@@ -310,6 +330,7 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
             descPlaceholder: 'Optional, shown under the name',
             hasFootnote: false,
             categorySelect: true,
+            parentOptions: collections.map((c) => ({ id: c.id, name: c.name })),
           }}
           onChange={(updated) =>
             setAddons((prev) => prev.map((a) => (a.id === entry.id ? updated : a)))
