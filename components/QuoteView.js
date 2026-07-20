@@ -19,9 +19,15 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
   const [error, setError] = useState('');
   const [saveState, setSaveState] = useState('');
   const [copied, setCopied] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(() =>
+    initialQuote.items.some(
+      (item) => item.kind === 'addon' && !item.indent && item.selected && item.qty > 0
+    )
+  );
   const saveTimer = useRef(null);
   const quoteRef = useRef(quote);
   quoteRef.current = quote;
+  const prevDrawerCount = useRef(null);
 
   const accepted = quote.status === 'accepted';
   const editable = admin && !accepted;
@@ -122,6 +128,78 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
 
   const totals = computeTotals(quote.items, quote.taxRate);
 
+  // Collections and their attached lines stay on the page; standalone
+  // a la carte add-ons live in a collapsible drawer so long lists (wall art)
+  // only take space when needed.
+  const mainItems = quote.items.filter((item) => item.kind !== 'addon' || item.indent);
+  const drawerItems = quote.items.filter((item) => item.kind === 'addon' && !item.indent);
+  const drawerSelectedCount = drawerItems.filter((item) => lineTotalCents(item) > 0).length;
+
+  // When something inside the closed drawer gets picked (e.g. the
+  // photographer selects it during a call and the viewer's page polls the
+  // change in), open the drawer so the new line is visible. Only on the
+  // 0 -> some transition, so a deliberate collapse stays collapsed.
+  useEffect(() => {
+    if (prevDrawerCount.current === 0 && drawerSelectedCount > 0) setDrawerOpen(true);
+    prevDrawerCount.current = drawerSelectedCount;
+  }, [drawerSelectedCount]);
+
+  // On a checkbox line with a quantity, checking means "one of it" - the box
+  // and the math must never disagree.
+  function toggleItem(item, checked) {
+    if (item.kind === 'addon') {
+      updateItem(item.key, {
+        selected: checked,
+        qty: checked ? Math.max(1, Number(item.qty) || 0) : 0,
+      });
+    } else {
+      updateItem(item.key, { selected: checked });
+    }
+  }
+
+  function renderItemRow(item) {
+    const zero = lineTotalCents(item) === 0;
+    return (
+      <div
+        className={`item-row${item.kind === 'addon' ? ' addon-row' : ''}${item.indent ? ' indent' : ''}${zero ? ' zero' : ''}`}
+        key={item.key}
+      >
+        <div className="item-check">
+          <input
+            type="checkbox"
+            checked={!!item.selected}
+            disabled={!editable}
+            readOnly={!editable}
+            onChange={editable ? (event) => toggleItem(item, event.target.checked) : undefined}
+          />
+        </div>
+        <div className="item-main">
+          <p className="item-name">{item.name}</p>
+          {item.description ? <p className="item-desc">{item.description}</p> : null}
+          {item.footnote ? <p className="item-footnote">{item.footnote}</p> : null}
+        </div>
+        {item.kind === 'addon' && editable ? (
+          <input
+            className="item-qty"
+            type="number"
+            min="0"
+            value={item.qty}
+            onChange={(event) => {
+              const qty = Math.max(0, Number(event.target.value) || 0);
+              updateItem(item.key, { qty, selected: qty > 0 });
+            }}
+          />
+        ) : item.kind === 'addon' ? (
+          <input className="item-qty" value={item.qty} readOnly tabIndex={-1} />
+        ) : (
+          <div className="item-qty static">{item.qty}</div>
+        )}
+        <div className="item-unit">{formatMoney(item.unitPriceCents)}</div>
+        <div className="item-total">{formatMoney(lineTotalCents(item))}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="quote-shell pad-for-totals">
       {admin ? (
@@ -176,51 +254,30 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
 
         {settings.introText ? <p className="quote-intro">{settings.introText}</p> : null}
 
-        <div className="item-table">
-          {quote.items.map((item) => (
-            <div
-              className={`item-row${item.kind === 'addon' ? ' addon-row' : ''}${item.indent ? ' indent' : ''}`}
-              key={item.key}
+        <div className="item-table">{mainItems.map(renderItemRow)}</div>
+
+        {drawerItems.length ? (
+          <div className="alacarte-section">
+            <button
+              type="button"
+              className="alacarte-toggle"
+              onClick={() => setDrawerOpen((open) => !open)}
             >
-              <div className="item-check">
-                <input
-                  type="checkbox"
-                  checked={!!item.selected}
-                  disabled={!editable}
-                  readOnly={!editable}
-                  onChange={
-                    editable
-                      ? (event) => updateItem(item.key, { selected: event.target.checked })
-                      : undefined
-                  }
-                />
+              <span className="chev no-print">{drawerOpen ? '▾' : '▸'}</span>
+              <span className="alacarte-label">A la carte items</span>
+              <span className="alacarte-count">
+                {drawerSelectedCount > 0
+                  ? `${drawerSelectedCount} selected`
+                  : `${drawerItems.length} available`}
+              </span>
+            </button>
+            <div className={`alacarte-body${drawerOpen ? '' : ' closed'}`}>
+              <div className="item-table" style={{ marginTop: 0 }}>
+                {drawerItems.map(renderItemRow)}
               </div>
-              <div className="item-main">
-                <p className="item-name">{item.name}</p>
-                {item.description ? <p className="item-desc">{item.description}</p> : null}
-                {item.footnote ? <p className="item-footnote">{item.footnote}</p> : null}
-              </div>
-              {item.kind === 'addon' && editable ? (
-                <input
-                  className="item-qty"
-                  type="number"
-                  min="0"
-                  value={item.qty}
-                  onChange={(event) => {
-                    const qty = Math.max(0, Number(event.target.value) || 0);
-                    updateItem(item.key, { qty, selected: qty > 0 });
-                  }}
-                />
-              ) : item.kind === 'addon' ? (
-                <input className="item-qty" value={item.qty} readOnly tabIndex={-1} />
-              ) : (
-                <div className="item-qty static">{item.qty}</div>
-              )}
-              <div className="item-unit">{formatMoney(item.unitPriceCents)}</div>
-              <div className="item-total">{formatMoney(lineTotalCents(item))}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : null}
 
         <QuoteTotals totals={totals} />
 

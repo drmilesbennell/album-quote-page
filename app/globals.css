@@ -276,6 +276,43 @@ a:hover {
   padding-left: 34px;
 }
 
+/* Collapsible a la carte drawer */
+.alacarte-toggle {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--anp-rule);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+.alacarte-toggle .chev {
+  color: var(--anp-blue);
+  font-size: 12px;
+  width: 14px;
+}
+.alacarte-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--anp-blue);
+}
+.alacarte-count {
+  font-size: 12px;
+  color: var(--anp-body);
+}
+.alacarte-body.closed {
+  display: none;
+}
+.alacarte-body .item-row:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
 .totals {
   border-top: 1px solid var(--anp-rule);
   padding-top: 20px;
@@ -691,6 +728,14 @@ a:hover {
   }
   .no-print {
     display: none !important;
+  }
+  /* Print always shows chosen a la carte lines and skips untouched ones,
+     regardless of the drawer's on-screen state. */
+  .alacarte-body {
+    display: block !important;
+  }
+  .alacarte-body .item-row.zero {
+    display: none;
   }
   .quote-shell {
     padding: 0;
