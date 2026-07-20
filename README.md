@@ -8,7 +8,9 @@ when they type their name to accept, the quote locks and records the signature,
 time and exact totals.
 
 Styling follows the ANP brand standards v3 (Prussian and gold on white,
-Newsreader and Plus Jakarta Sans, prices with no dollar signs or commas).
+Newsreader and Plus Jakarta Sans). Prices use standard currency formatting
+("$6,550.00") since the brand's no-dollar-sign rule applies to the website
+only.
 
 ## How it works
 
