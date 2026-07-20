@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { computeTotals, formatMoney, lineTotalCents } from '@/lib/totals';
+import {
+  computeTotals,
+  effectiveUnitPriceCents,
+  formatMoney,
+  lineTotalCents,
+  selectedCollectionNames,
+} from '@/lib/totals';
 import { QuoteTotals } from '@/components/QuoteItemsView';
 
 const POLL_MS = 4000;
@@ -128,12 +134,19 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
 
   const totals = computeTotals(quote.items, quote.taxRate);
 
-  // Collections and their attached lines stay on the page; standalone
-  // a la carte add-ons live in a collapsible drawer so long lists (wall art)
-  // only take space when needed.
-  const mainItems = quote.items.filter((item) => item.kind !== 'addon' || item.indent);
-  const drawerItems = quote.items.filter((item) => item.kind === 'addon' && !item.indent);
-  const drawerSelectedCount = drawerItems.filter((item) => lineTotalCents(item) > 0).length;
+  // Collections, attached lines and featured add-ons stay on the page;
+  // the remaining a la carte add-ons live in a collapsible drawer so long
+  // lists (wall art) only take space when needed.
+  const selNames = selectedCollectionNames(quote.items);
+  const mainItems = quote.items.filter(
+    (item) => item.kind !== 'addon' || item.indent || item.featured
+  );
+  const drawerItems = quote.items.filter(
+    (item) => item.kind === 'addon' && !item.indent && !item.featured
+  );
+  const drawerSelectedCount = drawerItems.filter(
+    (item) => lineTotalCents(item, selNames) > 0
+  ).length;
 
   // When something inside the closed drawer gets picked (e.g. the
   // photographer selects it during a call and the viewer's page polls the
@@ -158,7 +171,11 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
   }
 
   function renderItemRow(item) {
-    const zero = lineTotalCents(item) === 0;
+    const unit = effectiveUnitPriceCents(item, selNames);
+    const included = unit === 'included';
+    const discounted = !included && item.kind === 'addon' && unit !== item.unitPriceCents;
+    const total = lineTotalCents(item, selNames);
+    const zero = total === 0;
     return (
       <div
         className={`item-row${item.kind === 'addon' ? ' addon-row' : ''}${item.indent ? ' indent' : ''}${zero ? ' zero' : ''}`}
@@ -178,7 +195,7 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
           {item.description ? <p className="item-desc">{item.description}</p> : null}
           {item.footnote ? <p className="item-footnote">{item.footnote}</p> : null}
         </div>
-        {item.kind === 'addon' && editable ? (
+        {item.kind === 'addon' && !included && editable ? (
           <input
             className="item-qty"
             type="number"
@@ -189,13 +206,28 @@ export default function QuoteView({ initialQuote, initialSettings, admin }) {
               updateItem(item.key, { qty, selected: qty > 0 });
             }}
           />
-        ) : item.kind === 'addon' ? (
+        ) : item.kind === 'addon' && !included ? (
           <input className="item-qty" value={item.qty} readOnly tabIndex={-1} />
+        ) : item.kind === 'addon' ? (
+          <div className="item-qty static" />
         ) : (
           <div className="item-qty static">{item.qty}</div>
         )}
-        <div className="item-unit">{formatMoney(item.unitPriceCents)}</div>
-        <div className="item-total">{formatMoney(lineTotalCents(item))}</div>
+        <div className="item-unit">
+          {included ? (
+            <span className="included-tag">Included</span>
+          ) : discounted ? (
+            <>
+              <s className="was-price">{formatMoney(item.unitPriceCents)}</s>{' '}
+              {formatMoney(unit)}
+            </>
+          ) : (
+            formatMoney(unit)
+          )}
+        </div>
+        <div className="item-total">
+          {included ? <span className="included-tag">Included</span> : formatMoney(total)}
+        </div>
       </div>
     );
   }

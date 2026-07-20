@@ -74,6 +74,44 @@ function EntryCard({ entry, fields, onChange, onSave, onDelete, onMove, saveStat
           </div>
         ) : null}
       </div>
+      {fields.parentOptions?.length ? (
+        <div className="field">
+          <label>Price per collection</label>
+          <p className="hint" style={{ marginTop: 0, marginBottom: 8 }}>
+            When one of these collections is checked on a quote, this add-on
+            automatically charges that collection&apos;s rate instead of the full
+            price. Leave blank for full price, or mark it included (no charge).
+          </p>
+          {fields.parentOptions.map((c) => {
+            const tier = (entry.tierEdit || {})[c.id] || { included: false, text: '' };
+            const setTier = (patch) =>
+              onChange({
+                ...entry,
+                tierEdit: { ...(entry.tierEdit || {}), [c.id]: { ...tier, ...patch } },
+              });
+            return (
+              <div key={c.id} className="tier-row">
+                <span className="tier-name">{c.name}</span>
+                <input
+                  type="text"
+                  placeholder="Full price"
+                  value={tier.included ? '' : tier.text}
+                  disabled={tier.included}
+                  onChange={(event) => setTier({ text: event.target.value })}
+                />
+                <label className="muted" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <input
+                    type="checkbox"
+                    checked={tier.included}
+                    onChange={(event) => setTier({ included: event.target.checked })}
+                  />
+                  Included
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
       <div className="field">
         <label>{fields.descLabel}</label>
         <textarea
@@ -104,6 +142,16 @@ function EntryCard({ entry, fields, onChange, onSave, onDelete, onMove, saveStat
           />
           Include on new quotes
         </label>
+        {fields.hasFeatured ? (
+          <label className="muted" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={!!entry.featured}
+              onChange={(event) => onChange({ ...entry, featured: event.target.checked })}
+            />
+            Always visible (skip the a la carte drawer)
+          </label>
+        ) : null}
         <span className="spacer" style={{ flex: 1 }} />
         <button className="icon-btn" title="Move up" onClick={() => onMove(-1)}>
           ▲
@@ -134,6 +182,14 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
       ...a,
       priceText: formatMoney(a.unitPriceCents),
       descText: a.description,
+      tierEdit: Object.fromEntries(
+        Object.entries(a.tierPrices || {}).map(([collectionId, value]) => [
+          collectionId,
+          value === 'included'
+            ? { included: true, text: '' }
+            : { included: false, text: formatMoney(value) },
+        ])
+      ),
     }))
   );
   const [saveStates, setSaveStates] = useState({});
@@ -165,6 +221,11 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
 
   async function saveAddon(entry) {
     setSaveState(entry.id, 'Saving…');
+    const tierPrices = {};
+    for (const [collectionId, tier] of Object.entries(entry.tierEdit || {})) {
+      if (tier.included) tierPrices[collectionId] = 'included';
+      else if (String(tier.text).trim() !== '') tierPrices[collectionId] = parseMoney(tier.text);
+    }
     const res = await fetch(`/api/addons/${entry.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -176,6 +237,8 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
         active: entry.active,
         category: entry.category,
         parentCollectionId: entry.parentCollectionId || '',
+        tierPrices,
+        featured: !!entry.featured,
       }),
     });
     setSaveState(entry.id, res.ok ? 'Saved' : 'Save failed');
@@ -315,10 +378,10 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
 
       <h2 className="panel-heading">Add-ons</h2>
       <p className="muted" style={{ marginTop: 0, marginBottom: 16 }}>
-        Add-ons get a quantity box on the quote, e.g. extra album pages or additional
-        hours. Choose which kind of quote each one appears on. An add-on attached under
-        a collection sits indented beneath it and only appears on quotes that include
-        that collection - use this for per-collection page rates.
+        Add-ons get a quantity box on the quote. Set a price per collection and the
+        quote reprices the line automatically when that collection is checked - or mark
+        it included so it shows no charge. Add-ons live in the collapsed a la carte
+        drawer unless marked always visible or attached under a collection.
       </p>
       {addons.map((entry, index) => (
         <EntryCard
@@ -330,6 +393,7 @@ export default function CatalogEditor({ initialCollections, initialAddons }) {
             descPlaceholder: 'Optional, shown under the name',
             hasFootnote: false,
             categorySelect: true,
+            hasFeatured: true,
             parentOptions: collections.map((c) => ({ id: c.id, name: c.name })),
           }}
           onChange={(updated) =>

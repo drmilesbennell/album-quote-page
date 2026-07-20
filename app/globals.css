@@ -276,6 +276,21 @@ a:hover {
   padding-left: 34px;
 }
 
+/* Dynamic add-on pricing */
+.was-price {
+  color: var(--anp-body);
+  font-size: 13px;
+  margin-right: 2px;
+}
+.included-tag {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--anp-ok);
+}
+
 /* Collapsible a la carte drawer */
 .alacarte-toggle {
   width: 100%;
@@ -693,6 +708,23 @@ a:hover {
   background: var(--anp-surface);
   color: var(--anp-body);
   font-size: 12px;
+}
+
+.tier-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tier-row .tier-name {
+  width: 140px;
+  font-size: 13px;
+  color: var(--anp-ink);
+}
+.tier-row input[type='text'] {
+  width: 130px;
+  padding: 7px 10px;
+  border: 1px solid var(--anp-rule);
 }
 
 .login-wrap {
